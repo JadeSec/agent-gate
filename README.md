@@ -1,4 +1,4 @@
-# jadSEC – Security Gate Action for CI/CD
+# JadeSec – Security Gate Action for CI/CD
 
 **JadeSec – a security gate solution for CI/CD pipelines.**  
 This GitHub Action sends the **full GitHub workflow context** to an external API for validation before allowing deployments or critical workflow steps.
@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: JadeSec Gate Validation
-        uses: jadesec/jadSec@v1
+        uses: jadeSec/agent-gate@v1
         with:
           api_url: "https://gate.example.com/validate"
           api_key: ${{ secrets.JADESEC_GATE_KEY }}
