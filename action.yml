@@ -3,7 +3,7 @@ description: "A open source Security gate solution for CI/CD pipelines."
 author: "JadeSec Team"
 
 branding:
-  icon: "gate"
+  icon: "aperture"
   color: "green"
 
 inputs:
