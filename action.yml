@@ -1,5 +1,5 @@
 name: "jadSEC"
-description: "JadeSec - a security gate solution for CI/CD pipelines. Sends full GitHub context to an external API for validation before deployment."
+description: "Security gate solution for CI/CD pipelines."
 author: "JadeSec Team"
 
 branding:
