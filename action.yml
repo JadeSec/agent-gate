@@ -1,10 +1,10 @@
-name: "JadeSEC - GATE"
-description: "Security gate solution for CI/CD pipelines."
+name: "Security Gate"
+description: "A open source Security gate solution for CI/CD pipelines."
 author: "JadeSec Team"
 
 branding:
-  icon: "shield"
-  color: "purple"
+  icon: "gate"
+  color: "green"
 
 inputs:
   api_url:
