@@ -1,0 +1,74 @@
+name: "jadSEC"
+description: "JadeSec - a security gate solution for CI/CD pipelines. Sends full GitHub context to an external API for validation before deployment."
+author: "JadeSec Team"
+
+branding:
+  icon: "shield"
+  color: "purple"
+
+inputs:
+  api_url:
+    description: "The external Gate API endpoint (HTTPS) that validates the workflow."
+    required: true
+  api_key:
+    description: "Secret API key used to authenticate with the Gate API. Pass using GitHub Secrets."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    # Mask the API key to avoid leaking sensitive values in workflow logs
+    - name: Mask API Key
+      shell: bash
+      run: echo "::add-mask::${{ inputs.api_key }}"
+
+    # Build JSON payload using GitHub Context and send it to JadeSec Gate API for validation
+    - name: Send JadeSec Gate Request
+      id: gate
+      shell: bash
+      run: |
+        set -euo pipefail
+        
+        API_URL="${{ inputs.api_url }}"
+        API_KEY="${{ inputs.api_key }}"
+
+        # Prepare full GitHub context payload to send for security validation
+        PAYLOAD=$(cat <<EOF
+        {
+          "repository": "${{ github.repository }}",
+          "owner": "${{ github.repository_owner }}",
+          "event_name": "${{ github.event_name }}",
+          "workflow": "${{ github.workflow }}",
+          "actor": "${{ github.actor }}",
+          "ref": "${{ github.ref }}",
+          "ref_name": "${{ github.ref_name }}",
+          "sha": "${{ github.sha }}",
+          "run_id": "${{ github.run_id }}",
+          "run_number": "${{ github.run_number }}",
+          "triggering_actor": "${{ github.triggering_actor }}",
+          "server_url": "${{ github.server_url }}",
+          "pr": ${{ toJSON(github.event.pull_request) || 'null' }},
+          "release": ${{ toJSON(github.event.release) || 'null' }}
+        }
+        EOF
+        )
+
+        echo "Sending context to JadeSec Gate API..."
+        echo "$PAYLOAD" | jq . || true
+
+        RESPONSE=$(curl -sS -X POST "$API_URL" \
+          -H "Authorization: Bearer $API_KEY" \
+          -H "Content-Type: application/json" \
+          -d "$PAYLOAD" || true)
+
+        echo "JadeSec Gate API Response:"
+        echo "$RESPONSE"
+
+        # Validate API response status
+        echo "$RESPONSE" | grep -E '"status"\s*:\s*"ok"' >/dev/null 2>&1 && {
+          echo "JadeSec Gate Authorized - Proceeding with workflow"
+          exit 0
+        }
+
+        echo "::error:: JadeSec Gate Blocked the workflow deployment."
+        exit 1
